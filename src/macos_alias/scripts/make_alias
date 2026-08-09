@@ -2,7 +2,7 @@
 
 # Run make_alias AppleScript
 
-output=$(./make_alias.applescript "$@" 2>&1)
+output=$(make_alias.applescript "$@" 2>&1)
 if [[ $output =~ ".*Created alias.*" ]]; then
     echo "Created alias"
     exit 0

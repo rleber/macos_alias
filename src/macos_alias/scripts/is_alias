@@ -2,7 +2,7 @@
 
 # Run is_alias AppleScript
 
-output=$(./is_alias.applescript "$@" 2>&1)
+output=$(is_alias.applescript "$@" 2>&1)
 if [[ $output =~ ".*is not an alias.*" ]]; then
     echo "$1 is not an alias"
     exit 1

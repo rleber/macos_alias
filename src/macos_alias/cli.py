@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-import mac_alias
 import struct
 import subprocess
 import sys
@@ -8,7 +7,8 @@ import sys
 class ParentDirectoryNotFoundError(FileNotFoundError):
     pass
 
-def main(args):
+def main(argv = sys.argv):
+    args = argv[1:]
     if len(args) == 0:
         usage()
 
@@ -156,4 +156,4 @@ def is_alias(file):
 
 
 if __name__ == "__main__":
-    main(sys.argv[1:])
+    main(sys.argv)
