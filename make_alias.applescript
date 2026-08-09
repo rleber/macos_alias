@@ -11,7 +11,7 @@ on run argv
         -- Check the first argument; expand it
         set target_path to item 1 of argv
         try
-            set expanded_target_path to do shell script "echo " & quoted form of target_path & " | xargs realpath"
+            set expanded_target_path to do shell script "echo " & quoted form of target_path & " | tr '\\n' '\\0' | xargs -0 realpath"
         on error errorMessage number errorNumber -- Most likely, the target file does not exist
             if errorNumber = 1 then
                 return "Error: " & target_path & " does not exist"
