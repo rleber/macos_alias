@@ -1,0 +1,21 @@
+#!/usr/bin/env zsh
+
+# Run alias_target AppleScript
+
+output=$(./is_alias.applescript "$@" 2>&1)
+if [[ $output =~ ".*is not an alias.*" ]]; then
+    echo "$1 is not an alias"
+    exit 1
+elif [[ $output =~ ".*is an alias.*" ]]; then
+    echo "$1 is an alias"
+    exit 0
+elif [[ $output =~ ".*Usage.*" ]]; then
+    echo "Usage: is_alias <alias_file>"
+    exit 2
+elif [[ $output =~ ".*No such file or directory.*" ]]; then
+    echo "$1 does not exist"
+    exit 3
+else
+    echo "Unknown result: $output"
+    exit 4
+fi
