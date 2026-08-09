@@ -1,0 +1,42 @@
+# See https://packaging.python.org/en/latest/guides/writing-pyproject-toml/
+
+
+[build-system]
+requires = ["setuptools", "setuptools-scm"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "macos_alias"
+description = "A set of tools for working with macOS aliases"
+authors = [
+    {name="Richard LeBer", email = "richard.leber@gmail.com"}
+]
+license = "MIT"
+license-files = ["LICENSE.md"]
+readme = "README.md"
+requires-python = ">=3.12"
+dynamic = ["version"]
+dependencies = [
+]
+
+[project.scripts] 
+macos_alias = "macos_alias.cli:main"
+
+# [project.urls] # TODO Complete or remove
+# Homepage = "url"
+# Documentation = "url"
+# Repository = "url"
+# Etc. See https://packaging.python.org/en/latest/guides/writing-pyproject-toml/#urls
+
+[tool.setuptools]
+script-files = [
+  "src/macos_alias/scripts/alias_target",
+  "src/macos_alias/scripts/alias_target.applescript",
+  "src/macos_alias/scripts/is_alias",
+  "src/macos_alias/scripts/is_alias.applescript",
+  "src/macos_alias/scripts/make_alias",
+  "src/macos_alias/scripts/make_alias.applescript"
+]
+
+[tool.setuptools.dynamic]
+version = {attr = "macos_alias.__version__"}
