@@ -7,7 +7,7 @@ on run argv
         -- Check the first argument; expand it
         set alias_path to item 1 of argv
         try
-            set expanded_alias_path to do shell script "echo " & quoted form of alias_path & " | xargs realpath"
+            set expanded_alias_path to do shell script "echo " & quoted form of alias_path & " | tr '\\n' '\\0' | xargs -0 realpath"
         on error errorMessage number errorNumber
             if errorNumber = 1 then
                 return "Error: " & alias_path & " does not exist"
