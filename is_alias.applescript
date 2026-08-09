@@ -8,8 +8,12 @@ on run argv
         set alias_path to item 1 of argv
         try
             set expanded_alias_path to do shell script "echo " & quoted form of alias_path & " | xargs realpath"
-        on error errorMessage number errorNumber -- Most likely, the file does not exist
-            error errorMessage number 1
+        on error errorMessage number errorNumber
+            if errorNumber = 1 then
+                return "Error: " & alias_path & " does not exist"
+            else
+                return "Error: " & errorMessage
+            end if
         end try
         set test_file to POSIX file expanded_alias_path
         tell application "Finder"

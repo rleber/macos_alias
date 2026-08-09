@@ -8,7 +8,7 @@ if [[ $output =~ ".* is not an alias.*" ]]; then
     exit 1
 elif [[ $output =~ ".* broken alias.*" ]]; then
     echo "$1 is a broken alias"
-    exit 3
+    exit 2
 elif [[ $output =~ ".* does not exist.*" ]]; then
     echo "$1 does not exist"
     exit 3
