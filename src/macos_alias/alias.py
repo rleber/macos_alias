@@ -41,7 +41,6 @@ class MacOSAliasHandler:
 
         try:
             file_url = NSURL.fileURLWithPath_(str(file_path))
-            # Must use Foundation.NSURLIsAliasFileKey constant instead of raw string
             resource_values, error = file_url.resourceValuesForKeys_error_(
                 [NSURLIsAliasFileKey], None
             )
@@ -103,8 +102,11 @@ class MacOSAliasHandler:
 
     @classmethod
     def read_target(cls, alias_path: Path) -> Path | None:
+        """Resolves a macOS Finder Alias path to its target Path, returning None if invalid."""
         if not cls.is_alias(alias_path):
-            return False
+            # Fixed type mismatch: return None instead of False to match Path | None return type
+            return None
+
         try:
             alias_url = NSURL.fileURLWithPath_(str(alias_path))
             bookmark_data, bm_err = cls._read_bookmark_data(alias_url)

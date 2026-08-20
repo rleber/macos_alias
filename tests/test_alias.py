@@ -13,7 +13,7 @@ def test_is_available_returns_bool() -> None:
     assert isinstance(MacOSAliasHandler.is_available(), bool)
 
 
-def test_non_alias_file_returns_false(tmp_path: Path) -> None:
+def test_non_alias_file_returns_false_and_none(tmp_path: Path) -> None:
     regular_file = tmp_path / "regular.txt"
     regular_file.write_text("data")
 
@@ -22,11 +22,15 @@ def test_non_alias_file_returns_false(tmp_path: Path) -> None:
 
     assert not MacOSAliasHandler.is_alias(regular_file)
     assert not MacOSAliasHandler.is_alias(symlink_file)
+    # Validate read_target return values on non-alias files
+    assert MacOSAliasHandler.read_target(regular_file) is None
+    assert MacOSAliasHandler.read_target(symlink_file) is None
 
 
-def test_missing_file_returns_false(tmp_path: Path) -> None:
+def test_missing_file_returns_false_and_none(tmp_path: Path) -> None:
     non_existent = tmp_path / "does_not_exist.alias"
     assert not MacOSAliasHandler.is_alias(non_existent)
+    assert MacOSAliasHandler.read_target(non_existent) is None
 
 
 @pytest.mark.skipif(
@@ -64,12 +68,13 @@ def test_cocoa_exception_handling(tmp_path: Path) -> None:
 
     corrupt_alias = tmp_path / "corrupt.alias"
     corrupt_alias.write_text("invalid payload")
-    dummy_target = tmp_path / "target.txt"
 
-    # Patch the internal helper method instead of the C-extension class directly
-    with patch.object(MacOSAliasHandler, "is_alias", return_value=True), patch.object(
-        MacOSAliasHandler,
-        "_read_bookmark_data",
-        side_effect=objc.error("NSInvalidArgumentException", "Bad payload", None),
+    with (
+        patch.object(MacOSAliasHandler, "is_alias", return_value=True),
+        patch.object(
+            MacOSAliasHandler,
+            "_read_bookmark_data",
+            side_effect=objc.error("NSInvalidArgumentException", "Bad payload", None),
+        ),
     ):
         assert MacOSAliasHandler.read_target(corrupt_alias) is None
