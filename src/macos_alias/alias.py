@@ -1,6 +1,6 @@
 # src/macos_alias/alias.py
 
-import logging
+from contextlib import suppress
 from pathlib import Path
 
 try:
@@ -16,8 +16,6 @@ try:
 except ImportError:
     HAS_PYOBJC = False
     objc = None
-
-logger = logging.getLogger(__name__)
 
 
 class MacOSAliasHandler:
@@ -47,21 +45,16 @@ class MacOSAliasHandler:
             if error or not resource_values:
                 return False
             return bool(resource_values.get(NSURLIsAliasFileKey, False))
-        except (OSError, objc.error) as err:
-            logger.warning("Failed determining alias state for %s: %s", file_path, err)
+        except (OSError, objc.error):
             return False
 
     @classmethod
     def update_alias(cls, alias_path: Path, new_target: Path) -> bool:
         """Updates or creates a macOS Finder Alias (BookmarkData) referencing new_target."""
         if not cls.is_available():
-            logger.warning(
-                "pyobjc-framework-Cocoa not installed; skipping update for %s",
-                alias_path,
-            )
             return False
 
-        try:
+        with suppress(OSError, PermissionError, objc.error):
             alias_url = NSURL.fileURLWithPath_(str(alias_path))
             new_target_url = NSURL.fileURLWithPath_(str(new_target))
 
@@ -74,9 +67,6 @@ class MacOSAliasHandler:
                 )
             )
             if error or not bookmark_data:
-                logger.error(
-                    "Failed creating bookmark data for %s: %s", new_target, error
-                )
                 return False
 
             success, error = NSURL.writeBookmarkData_toURL_options_error_(
@@ -85,29 +75,16 @@ class MacOSAliasHandler:
                 NSURLBookmarkCreationSuitableForBookmarkFile,
                 None,
             )
-            if not success or error:
-                logger.error(
-                    "Failed writing updated alias to %s: %s", alias_path, error
-                )
-                return False
-            return True
-        except (OSError, PermissionError) as err:
-            logger.error("I/O failure updating macOS alias at %s: %s", alias_path, err)
-            return False
-        except objc.error as err:
-            logger.error(
-                "Cocoa API runtime error updating alias %s: %s", alias_path, err
-            )
-            return False
+            return success and not error
+        return False
 
     @classmethod
     def read_target(cls, alias_path: Path) -> Path | None:
         """Resolves a macOS Finder Alias path to its target Path, returning None if invalid."""
         if not cls.is_alias(alias_path):
-            # Fixed type mismatch: return None instead of False to match Path | None return type
             return None
 
-        try:
+        with suppress(OSError, PermissionError, objc.error, ValueError):
             alias_url = NSURL.fileURLWithPath_(str(alias_path))
             bookmark_data, bm_err = cls._read_bookmark_data(alias_url)
             if bm_err or not bookmark_data:
@@ -126,10 +103,5 @@ class MacOSAliasHandler:
             )
             if not res_err and resolved_url:
                 return Path(resolved_url.path()).resolve()
-        except (OSError, PermissionError) as err:
-            logger.warning(
-                "I/O error inspecting macOS alias at %s: %s", alias_path, err
-            )
-        except (objc.error, ValueError) as err:
-            logger.warning("Malformed bookmark data at %s: %s", alias_path, err)
+
         return None
