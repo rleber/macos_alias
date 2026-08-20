@@ -90,7 +90,7 @@ def test_main_make_success(
         Path("/alias/file.alias"), Path("/target/file.txt")
     )
     captured = capsys.readouterr()
-    assert captured.out.strip() == "Alias made"
+    assert captured.out.strip() == ""  # Function is terse
 
 
 @patch("macos_alias.cli.make_alias")
@@ -107,7 +107,7 @@ def test_main_make_failure(
         Path("/alias/file.alias"), Path("/target/file.txt")
     )
     captured = capsys.readouterr()
-    assert captured.out.strip() == "Failed to make alias"
+    assert captured.out.strip() == ""  # Function is terse
 
 
 @patch("macos_alias.cli.target_of")
