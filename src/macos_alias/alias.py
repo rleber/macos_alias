@@ -33,7 +33,7 @@ def is_alias(file_path: Path) -> bool:
     if not objc_is_available() or file_path.is_symlink() or not file_path.is_file():
         return False
 
-    try:
+    with suppress(OSError, objc.error):
         file_url = NSURL.fileURLWithPath_(str(file_path))
         resource_values, error = file_url.resourceValuesForKeys_error_(
             [NSURLIsAliasFileKey], None
@@ -41,8 +41,8 @@ def is_alias(file_path: Path) -> bool:
         if error or not resource_values:
             return False
         return bool(resource_values.get(NSURLIsAliasFileKey, False))
-    except (OSError, objc.error):
-        return False
+
+    return False
 
 
 def make_alias(alias_path: Path, new_target: Path) -> bool:
@@ -72,6 +72,7 @@ def make_alias(alias_path: Path, new_target: Path) -> bool:
             None,
         )
         return success and not error
+
     return False
 
 
