@@ -1,6 +1,6 @@
-__version__ = "0.1.1"
+__version__ = "0.2.0"
 
-from macos_alias.alias import MacOSAliasHandler
+from macos_alias.alias import is_alias, make_alias, objc_is_available, target_of  # noqa
 from macos_alias.cli import main
 
 __all__ = ["MacOSAliasHandler", "main"]

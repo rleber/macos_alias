@@ -76,7 +76,7 @@ def test_parser_invalid_arity(argv: list[str]) -> None:
     assert exc_info.value.code == 2
 
 
-@patch("macos_alias.cli.MacOSAliasHandler.update_alias")
+@patch("macos_alias.cli.make_alias")
 def test_main_make_success(
     mock_update: MagicMock, capsys: pytest.CaptureFixture[str]
 ) -> None:
@@ -93,7 +93,7 @@ def test_main_make_success(
     assert captured.out.strip() == "Alias made"
 
 
-@patch("macos_alias.cli.MacOSAliasHandler.update_alias")
+@patch("macos_alias.cli.make_alias")
 def test_main_make_failure(
     mock_update: MagicMock, capsys: pytest.CaptureFixture[str]
 ) -> None:
@@ -110,7 +110,7 @@ def test_main_make_failure(
     assert captured.out.strip() == "Failed to make alias"
 
 
-@patch("macos_alias.cli.MacOSAliasHandler.read_target")
+@patch("macos_alias.cli.target_of")
 def test_main_target_resolution(
     mock_read: MagicMock, capsys: pytest.CaptureFixture[str]
 ) -> None:

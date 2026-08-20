@@ -7,12 +7,12 @@ import sys
 from pathlib import Path
 
 from macos_alias import __version__
-from macos_alias.alias import MacOSAliasHandler
+from macos_alias.alias import make_alias, target_of
 
 
 def run_make(args: argparse.Namespace) -> int:
     """Executes the 'make' subcommand to create or update a Finder Alias."""
-    success = MacOSAliasHandler.update_alias(Path(args.link_at), Path(args.link_to))
+    success = make_alias(Path(args.link_at), Path(args.link_to))
     if success:
         print("Alias made")
         return 0
@@ -22,7 +22,7 @@ def run_make(args: argparse.Namespace) -> int:
 
 def run_target(args: argparse.Namespace) -> int:
     """Executes the 'target' subcommand to resolve an alias path."""
-    target = MacOSAliasHandler.read_target(Path(args.file))
+    target = target_of(Path(args.file))
     print(target)
     return 0
 
