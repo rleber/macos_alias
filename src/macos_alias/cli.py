@@ -1,5 +1,3 @@
-# src/macos_alias/cli.py
-
 #!/usr/bin/env python3
 
 import argparse
