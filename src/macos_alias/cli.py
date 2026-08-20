@@ -1,48 +1,81 @@
+# src/macos_alias/cli.py
+
 #!/usr/bin/env python3
 
+import argparse
 import sys
 from pathlib import Path
 
+from macos_alias import __version__
 from macos_alias.alias import MacOSAliasHandler
 
 
-def main(argv=sys.argv):
-    args = argv[1:]
-    if len(args) == 0:
-        usage()
-
-    match args[0].lower():
-        case "make":
-            if len(args) != 3:
-                usage()
-            run_make(args[1], args[2])
-        case "target":
-            if len(args) != 2:
-                usage()
-            run_target(args[1])
-        case _:
-            usage()
-
-
-def run_make(link_to, link_at):
-    res = MacOSAliasHandler.update_alias(Path(link_at), Path(link_to))
-    if res:
+def run_make(args: argparse.Namespace) -> int:
+    """Executes the 'make' subcommand to create or update a Finder Alias."""
+    success = MacOSAliasHandler.update_alias(Path(args.link_at), Path(args.link_to))
+    if success:
         print("Alias made")
-    else:
-        print("Failed to make alias")
+        return 0
+    print("Failed to make alias")
+    return 1
 
 
-def run_target(file):
-    target = MacOSAliasHandler.read_target(Path(file))
+def run_target(args: argparse.Namespace) -> int:
+    """Executes the 'target' subcommand to resolve an alias path."""
+    target = MacOSAliasHandler.read_target(Path(args.file))
     print(target)
+    return 0
 
 
-def usage():
-    print("Usage:")
-    print("  macos_alias.py target <file>")
-    print("  macos_alias.py make <link_to> <link_at>")
-    sys.exit(10)
+def build_parser() -> argparse.ArgumentParser:
+    """Constructs the CLI argument parser, configures subcommands, and adds version flag."""
+    parser = argparse.ArgumentParser(
+        prog="macos_alias",
+        description="CLI tool for managing macOS Finder Alias (BookmarkData) files.",
+    )
+
+    # Built-in version action; exits with 0 upon printing version string
+    parser.add_argument(
+        "-v",
+        "--version",
+        action="version",
+        version=f"%(prog)s {__version__}",
+        help="Show program's version number and exit.",
+    )
+
+    subparsers = parser.add_subparsers(
+        dest="command",
+        title="subcommands",
+        description="Valid operations",
+        required=True,
+    )
+
+    # Subcommand: make <link_to> <link_at>
+    make_parser = subparsers.add_parser(
+        "make", help="Create or update an alias file referencing a target path."
+    )
+    make_parser.add_argument("link_to", help="Target path that the alias points to.")
+    make_parser.add_argument(
+        "link_at", help="Destination path where the alias file is created."
+    )
+    make_parser.set_defaults(func=run_make)
+
+    # Subcommand: target <file>
+    target_parser = subparsers.add_parser(
+        "target", help="Resolve and print the target path of an alias file."
+    )
+    target_parser.add_argument("file", help="Path to the macOS Finder Alias file.")
+    target_parser.set_defaults(func=run_target)
+
+    return parser
+
+
+def main(argv: list[str] | None = None) -> int:
+    """CLI entrypoint accepting explicit argument vectors for testing capability."""
+    parser = build_parser()
+    args = parser.parse_args(argv)
+    return args.func(args)
 
 
 if __name__ == "__main__":
-    main(sys.argv)
+    sys.exit(main())

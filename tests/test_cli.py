@@ -5,101 +5,121 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-# Assumes CLI script is named cli.py; adjust import path if distinct
-from macos_alias.cli import main, run_make, run_target, usage
+from macos_alias import __version__
+from macos_alias.cli import build_parser, main
 
 
-def test_usage_exits_with_code_10(capsys: pytest.CaptureFixture[str]) -> None:
-    """Verify usage output format and exit code 10 status."""
+def test_parser_version_flag_long(capsys: pytest.CaptureFixture[str]) -> None:
+    """Verify --version flag outputs prog name and version string, exiting with code 0."""
+    parser = build_parser()
     with pytest.raises(SystemExit) as exc_info:
-        usage()
+        parser.parse_args(["--version"])
 
-    assert exc_info.value.code == 10
+    assert exc_info.value.code == 0
     captured = capsys.readouterr()
-    assert "Usage:" in captured.out
+    assert f"macos_alias {__version__}" in captured.out
 
 
-def test_main_empty_args_triggers_usage() -> None:
-    """Verify empty command invocation exits with code 10."""
+def test_parser_version_flag_short(capsys: pytest.CaptureFixture[str]) -> None:
+    """Verify -v flag outputs prog name and version string, exiting with code 0."""
+    parser = build_parser()
     with pytest.raises(SystemExit) as exc_info:
-        main(["cli.py"])
-    assert exc_info.value.code == 10
+        parser.parse_args(["-v"])
+
+    assert exc_info.value.code == 0
+    captured = capsys.readouterr()
+    assert f"macos_alias {__version__}" in captured.out
 
 
-def test_main_invalid_subcommand_triggers_usage() -> None:
-    """Verify unrecognized subcommand exits with code 10."""
+def test_parser_make_subcommand() -> None:
+    """Verify CLI parser correctly maps arguments for 'make' command."""
+    parser = build_parser()
+    args = parser.parse_args(["make", "/path/to/target", "/path/to/alias"])
+
+    assert args.command == "make"
+    assert args.link_to == "/path/to/target"
+    assert args.link_at == "/path/to/alias"
+
+
+def test_parser_target_subcommand() -> None:
+    """Verify CLI parser correctly maps arguments for 'target' command."""
+    parser = build_parser()
+    args = parser.parse_args(["target", "/path/to/alias"])
+
+    assert args.command == "target"
+    assert args.file == "/path/to/alias"
+
+
+def test_parser_missing_subcommand() -> None:
+    """Verify parser exits with code 2 when no subcommand or version flag is provided."""
+    parser = build_parser()
     with pytest.raises(SystemExit) as exc_info:
-        main(["cli.py", "invalid_cmd"])
-    assert exc_info.value.code == 10
+        parser.parse_args([])
+
+    assert exc_info.value.code == 2
 
 
 @pytest.mark.parametrize(
     "argv",
     [
-        ["cli.py", "make"],  # Missing target and alias paths
-        ["cli.py", "make", "/link_to"],  # Missing alias path
-        ["cli.py", "make", "/link_to", "/link_at", "extra_arg"],  # Too many args
-        ["cli.py", "target"],  # Missing file path
-        ["cli.py", "target", "/file", "extra_arg"],  # Too many args
+        ["make"],
+        ["make", "/only_one_arg"],
+        ["target"],
     ],
 )
-def test_main_argument_arity_mismatch(argv: list[str]) -> None:
-    """Verify invalid argument counts for commands raise SystemExit(10)."""
+def test_parser_invalid_arity(argv: list[str]) -> None:
+    """Verify parser exits with code 2 on parameter count mismatch."""
+    parser = build_parser()
     with pytest.raises(SystemExit) as exc_info:
-        main(argv)
-    assert exc_info.value.code == 10
+        parser.parse_args(argv)
+
+    assert exc_info.value.code == 2
 
 
-@patch("macos_alias.MacOSAliasHandler.update_alias")
-def test_run_make_success(
+@patch("macos_alias.cli.MacOSAliasHandler.update_alias")
+def test_main_make_success(
     mock_update: MagicMock, capsys: pytest.CaptureFixture[str]
 ) -> None:
-    """Verify stdout output when alias creation succeeds."""
+    """Verify successful stdout and return code when 'make' succeeds."""
     mock_update.return_value = True
 
-    run_make("/path/to/target", "/path/to/alias")
+    exit_code = main(["make", "/target/file.txt", "/alias/file.alias"])
 
-    # Order of parameters in CLI script pass (link_at, link_to) to update_alias
-    mock_update.assert_called_once_with(Path("/path/to/alias"), Path("/path/to/target"))
+    assert exit_code == 0
+    mock_update.assert_called_once_with(
+        Path("/alias/file.alias"), Path("/target/file.txt")
+    )
     captured = capsys.readouterr()
     assert captured.out.strip() == "Alias made"
 
 
-@patch("macos_alias.MacOSAliasHandler.update_alias")
-def test_run_make_failure(
+@patch("macos_alias.cli.MacOSAliasHandler.update_alias")
+def test_main_make_failure(
     mock_update: MagicMock, capsys: pytest.CaptureFixture[str]
 ) -> None:
-    """Verify stdout output when alias creation fails."""
+    """Verify stdout and return code when 'make' fails."""
     mock_update.return_value = False
 
-    run_make("/path/to/target", "/path/to/alias")
+    exit_code = main(["make", "/target/file.txt", "/alias/file.alias"])
 
-    mock_update.assert_called_once_with(Path("/path/to/alias"), Path("/path/to/target"))
+    assert exit_code == 1
+    mock_update.assert_called_once_with(
+        Path("/alias/file.alias"), Path("/target/file.txt")
+    )
     captured = capsys.readouterr()
     assert captured.out.strip() == "Failed to make alias"
 
 
-@patch("macos_alias.MacOSAliasHandler.read_target")
-def test_run_target(mock_read: MagicMock, capsys: pytest.CaptureFixture[str]) -> None:
-    """Verify stdout output when resolving alias target path."""
-    mock_read.return_value = Path("/resolved/target/path")
+@patch("macos_alias.cli.MacOSAliasHandler.read_target")
+def test_main_target_resolution(
+    mock_read: MagicMock, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Verify target path output and return code for 'target' subcommand."""
+    mock_read.return_value = Path("/resolved/target/file.txt")
 
-    run_target("/path/to/alias")
+    exit_code = main(["target", "/alias/file.alias"])
 
-    mock_read.assert_called_once_with(Path("/path/to/alias"))
+    assert exit_code == 0
+    mock_read.assert_called_once_with(Path("/alias/file.alias"))
     captured = capsys.readouterr()
-    assert captured.out.strip() == "/resolved/target/path"
-
-
-@patch("macos_alias.cli.run_make")
-def test_main_dispatch_make(mock_run_make: MagicMock) -> None:
-    """Verify main routes 'make' subcommand correctly and supports case-insensitivity."""
-    main(["macos_alias.py", "MAKE", "/target/path", "/alias/path"])
-    mock_run_make.assert_called_once_with("/target/path", "/alias/path")
-
-
-@patch("macos_alias.cli.run_target")
-def test_main_dispatch_target(mock_run_target: MagicMock) -> None:
-    """Verify main routes 'target' subcommand correctly."""
-    main(["cli.py", "target", "/alias/path"])
-    mock_run_target.assert_called_once_with("/alias/path")
+    assert captured.out.strip() == "/resolved/target/file.txt"
