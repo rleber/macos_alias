@@ -40,7 +40,7 @@ def run_target(file):
 def usage():
     print("Usage:")
     print("  macos_alias.py target <file>")
-    print("  macos_alias.py make <link_to> <link_at")
+    print("  macos_alias.py make <link_to> <link_at>")
     sys.exit(10)
 
 
