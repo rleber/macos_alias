@@ -10,12 +10,10 @@ from macos_alias.alias import make_alias, target_of
 
 def run_make(args: argparse.Namespace) -> int:
     """Executes the 'make' subcommand to create or update a Finder Alias."""
-    success = make_alias(Path(args.link_at), Path(args.link_to))
-    if success:
-        print("Alias made")
+    if make_alias(Path(args.link_at), Path(args.link_to)):
         return 0
-    print("Failed to make alias")
-    return 1
+    else:
+        return 1
 
 
 def run_target(args: argparse.Namespace) -> int:
