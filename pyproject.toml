@@ -4,13 +4,19 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "macos-alias"
-version = "0.1.0"
+dynamic = ["version"]
 description = "macOS Finder Alias handling module using Cocoa Foundation APIs."
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
     "pyobjc-framework-Cocoa; sys_platform == 'darwin'",
 ]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: MacOS :: MacOS X",
+]
+
 
 [project.optional-dependencies]
 test = [
