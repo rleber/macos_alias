@@ -1,0 +1,21 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "macos-alias"
+version = "0.1.0"
+description = "macOS Finder Alias handling module using Cocoa Foundation APIs."
+readme = "README.md"
+requires-python = ">=3.8"
+dependencies = [
+    "pyobjc-framework-Cocoa; sys_platform == 'darwin'",
+]
+
+[project.optional-dependencies]
+test = [
+    "pytest>=7.0.0",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
