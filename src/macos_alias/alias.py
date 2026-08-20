@@ -102,16 +102,14 @@ class MacOSAliasHandler:
             return False
 
     @classmethod
-    def resolves_to(cls, alias_path: Path, expected_target: Path) -> bool:
-        """Checks if a macOS Finder Alias currently resolves to expected_target."""
+    def read_target(cls, alias_path: Path) -> Path | None:
         if not cls.is_alias(alias_path):
             return False
-
         try:
             alias_url = NSURL.fileURLWithPath_(str(alias_path))
             bookmark_data, bm_err = cls._read_bookmark_data(alias_url)
             if bm_err or not bookmark_data:
-                return False
+                return None
 
             (
                 resolved_url,
@@ -125,11 +123,11 @@ class MacOSAliasHandler:
                 None,
             )
             if not res_err and resolved_url:
-                return Path(resolved_url.path()).resolve() == expected_target.resolve()
+                return Path(resolved_url.path()).resolve()
         except (OSError, PermissionError) as err:
             logger.warning(
                 "I/O error inspecting macOS alias at %s: %s", alias_path, err
             )
         except (objc.error, ValueError) as err:
             logger.warning("Malformed bookmark data at %s: %s", alias_path, err)
-        return False
+        return None

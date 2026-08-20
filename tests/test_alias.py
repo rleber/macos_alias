@@ -49,10 +49,10 @@ def test_alias_lifecycle(tmp_path: Path) -> None:
 
     assert MacOSAliasHandler.update_alias(alias_file, target_file)
     assert MacOSAliasHandler.is_alias(alias_file)
-    assert MacOSAliasHandler.resolves_to(alias_file, target_file)
+    assert MacOSAliasHandler.read_target(alias_file) == target_file.resolve()
 
     assert MacOSAliasHandler.update_alias(alias_file, new_target_file)
-    assert MacOSAliasHandler.resolves_to(alias_file, new_target_file)
+    assert MacOSAliasHandler.read_target(alias_file) == new_target_file.resolve()
 
 
 @pytest.mark.skipif(
@@ -72,4 +72,4 @@ def test_cocoa_exception_handling(tmp_path: Path) -> None:
         "_read_bookmark_data",
         side_effect=objc.error("NSInvalidArgumentException", "Bad payload", None),
     ):
-        assert not MacOSAliasHandler.resolves_to(corrupt_alias, dummy_target)
+        assert MacOSAliasHandler.read_target(corrupt_alias) is None
