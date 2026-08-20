@@ -1,3 +1,5 @@
+__version__ = "0.1.0"
+
 from macos_alias.alias import MacOSAliasHandler
 from macos_alias.cli import main
 

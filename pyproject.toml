@@ -17,5 +17,12 @@ test = [
     "pytest>=7.0.0",
 ]
 
+[project.scripts] 
+macos_alias = "macos_alias.cli:main"
+
+
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.setuptools.dynamic]
+version = {attr = "macos_alias.__version__"}
